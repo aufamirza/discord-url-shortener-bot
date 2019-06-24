@@ -1,5 +1,8 @@
-# IDE
+#IDE
 .idea/
 
-# build artefacts
+#build artefacts
 discord-url-shortener-bot
+
+#developer notes
+vars.yaml
