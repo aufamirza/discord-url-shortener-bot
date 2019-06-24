@@ -1,1 +1,5 @@
+# IDE
 .idea/
+
+# build artefacts
+discord-url-shortener-bot
