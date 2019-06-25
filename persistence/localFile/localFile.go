@@ -11,9 +11,21 @@ import (
 	"strings"
 )
 
+//type LocalFile struct {
+//	filePath string
+//	uRLs     map[string]string
+//}
+type addRequest struct {
+	//the long URL
+	URL string
+	//the channel to return the ID to
+	iDChan chan string
+}
+
 type LocalFile struct {
-	filePath string
-	URLs     map[string]string
+	filePath       string
+	uRLs           map[string]string
+	addRequestChan chan addRequest
 }
 
 func New() (error, LocalFile) {
@@ -21,8 +33,9 @@ func New() (error, LocalFile) {
 	//TODO parameterize
 	const filePath = "data.json"
 	localFile := LocalFile{
-		filePath: filePath,
-		URLs:     map[string]string{},
+		filePath:       filePath,
+		uRLs:           map[string]string{},
+		addRequestChan: make(chan addRequest),
 	}
 
 	//check if file exists
@@ -35,42 +48,55 @@ func New() (error, LocalFile) {
 			return err, LocalFile{}
 		}
 
-		err = json.Unmarshal(bytes, &localFile.URLs)
+		err = json.Unmarshal(bytes, &localFile.uRLs)
 		if err != nil {
 			return err, LocalFile{}
 		}
 
 		log.Println(fmt.Sprintf("loaded %v", filePath))
-		return nil, localFile
 	}
 
+	//start the goroutine to handle map writes
+	go loop(localFile)
 	return nil, localFile
 }
 
+//match the interface
 func (localFile LocalFile) Get(id string) string {
-	return localFile.URLs[id]
+	return localFile.uRLs[id]
 }
 
-func (localFile LocalFile) Add(link string) string {
-	//generate next ID
-	id := generateID(localFile)
+//match the interface
+func (localFile LocalFile) Add(URL string) string {
+	iDChan := make(chan string)
+	localFile.addRequestChan <- addRequest{
+		URL:    URL,
+		iDChan: iDChan,
+	}
+	return <-iDChan
+}
 
-	//store long URL in map using generated ID as key
-	localFile.URLs[id] = link
-	go updateFile(localFile)
-	return id
+//this single goroutine handles writes on the map to prevent race conditions
+func loop(localFile LocalFile) {
+	for addRequest := range localFile.addRequestChan {
+		id := generateID(localFile)
+		localFile.uRLs[id] = addRequest.URL
+		addRequest.iDChan <- id
+		//update the database file async because this could be slow and it is not mission critical the file is accurate
+		go updateFile(localFile)
+	}
 }
 
 func generateID(localFile LocalFile) string {
-	const RANDOM_LENGTH = 2
+	const randomLength = 2
 	chars := []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
 		"abcdefghijklmnopqrstuvwxyz" +
 		"0123456789")
 	randomBuilder := strings.Builder{}
-	for i := 0; i < RANDOM_LENGTH; i++ {
+	for i := 0; i < randomLength; i++ {
 		randomBuilder.WriteRune(chars[rand.Intn(len(chars))])
 	}
-	index := len(localFile.URLs)
+	index := len(localFile.uRLs)
 	idString := fmt.Sprintf("%v%v", index, randomBuilder.String())
 	log.Println(idString)
 	id := base64.StdEncoding.EncodeToString([]byte(idString))
@@ -79,7 +105,7 @@ func generateID(localFile LocalFile) string {
 
 //persist in memory map to object
 func updateFile(localFile LocalFile) {
-	bytes, err := json.Marshal(localFile.URLs)
+	bytes, err := json.Marshal(localFile.uRLs)
 	if err != nil {
 		log.Println(fmt.Sprintf("error: %v", err))
 	}
