@@ -6,8 +6,11 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"regexp"
 	"syscall"
 )
+
+var urlRegexp = regexp.MustCompile(`(https?://\S+\.\S+)`)
 
 func main() {
 	//set the ENV var to read for the Discord bot token
@@ -56,9 +59,14 @@ func messageCreate(session *discordgo.Session, message *discordgo.MessageCreate)
 		return
 	}
 
-	//simple reply
-	_, err := session.ChannelMessageSend(message.ChannelID, "I heard you")
-	if err != nil {
-		log.Println(fmt.Sprintf("error %v", err))
+	//get all matched url's in the message
+	urls := urlRegexp.FindAllString(message.Content, -1)
+
+	for _, url := range urls {
+		//echo url back
+		_, err := session.ChannelMessageSend(message.ChannelID, url)
+		if err != nil {
+			log.Println(fmt.Sprintf("error %v", err))
+		}
 	}
 }
