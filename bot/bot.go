@@ -10,17 +10,14 @@ import (
 )
 
 var urlRegexp *regexp.Regexp = regexp.MustCompile(`(https?://\S+\.\S+)`)
-var linkStore persistence.LinkStore
+var URLStore persistence.URLStore
 
-func Start(stop chan os.Signal, token string) {
+func Start(stop chan os.Signal, token string, newURLStore persistence.URLStore) {
 	//set error to empty to prevent locally scoping linkStore
 	var err error = nil
 
 	//configure persistence
-	err, linkStore = persistence.New()
-	if err != nil {
-		log.Fatalf("error: %v", err)
-	}
+	URLStore = newURLStore
 
 	//create bot
 	bot, err := discordgo.New("Bot " + token)
@@ -55,8 +52,8 @@ func messageCreate(session *discordgo.Session, message *discordgo.MessageCreate)
 
 	for _, url := range urls {
 		//persist URL
-		id := linkStore.Add(url)
-		_, err := session.ChannelMessageSend(message.ChannelID, id)
+		id := URLStore.Add(url)
+		_, err := session.ChannelMessageSend(message.ChannelID, fmt.Sprintf("http://localhost:8080/%v", id))
 		if err != nil {
 			log.Println(fmt.Sprintf("error: %v", err))
 		}

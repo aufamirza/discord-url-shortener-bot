@@ -2,6 +2,7 @@ package main
 
 import (
 	"discord-url-shortener-bot/bot"
+	"discord-url-shortener-bot/persistence"
 	"discord-url-shortener-bot/server"
 	"fmt"
 	"log"
@@ -22,9 +23,14 @@ func main() {
 		log.Fatal(fmt.Sprintf("error: could not find env var $%v", tokenEnvVar))
 	}
 
+	err, URLStore := persistence.New()
+	if err != nil {
+		log.Fatal(fmt.Sprintf("error: could not find env var $%v", tokenEnvVar))
+	}
+
 	//start the server to serve redirect URL's
-	go server.Start(stop)
-	go bot.Start(stop, token)
+	go server.Start(stop, URLStore)
+	go bot.Start(stop, token, URLStore)
 
 	//make channel to listen to OS signals
 	sc := make(chan os.Signal, 1)

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"discord-url-shortener-bot/persistence"
 	"fmt"
 	"github.com/julienschmidt/httprouter"
 	"log"
@@ -9,8 +10,12 @@ import (
 	"os"
 )
 
-func Start(stop chan os.Signal) {
+var URLStore persistence.URLStore
+
+func Start(stop chan os.Signal, newURLStore persistence.URLStore) {
 	const port = "8080"
+
+	URLStore = newURLStore
 
 	router := httprouter.New()
 
@@ -46,8 +51,19 @@ func Health(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
 
 //handle server URL redirect
 func ReturnShortURL(w http.ResponseWriter, _ *http.Request, p httprouter.Params) {
-	const location = "https://github.com/fraserdarwent"
+	id := p.ByName("id")
 
-	w.Header().Add("Location", location)
+	if id == "" {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	URL := URLStore.Get(id)
+	if URL == "" {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	w.Header().Add("Location", URL)
 	w.WriteHeader(http.StatusMovedPermanently)
 }

@@ -1,17 +1,19 @@
 package localFile
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"os"
-	"strconv"
+	"strings"
 )
 
 type LocalFile struct {
 	filePath string
-	links    map[string]string
+	URLs     map[string]string
 }
 
 func New() (error, LocalFile) {
@@ -20,7 +22,7 @@ func New() (error, LocalFile) {
 	const filePath = "data.json"
 	localFile := LocalFile{
 		filePath: filePath,
-		links:    map[string]string{},
+		URLs:     map[string]string{},
 	}
 
 	//check if file exists
@@ -33,7 +35,7 @@ func New() (error, LocalFile) {
 			return err, LocalFile{}
 		}
 
-		err = json.Unmarshal(bytes, &localFile.links)
+		err = json.Unmarshal(bytes, &localFile.URLs)
 		if err != nil {
 			return err, LocalFile{}
 		}
@@ -46,7 +48,7 @@ func New() (error, LocalFile) {
 }
 
 func (localFile LocalFile) Get(id string) string {
-	panic("unimplemented")
+	return localFile.URLs[id]
 }
 
 func (localFile LocalFile) Add(link string) string {
@@ -54,19 +56,30 @@ func (localFile LocalFile) Add(link string) string {
 	id := generateID(localFile)
 
 	//store long URL in map using generated ID as key
-	localFile.links[id] = link
+	localFile.URLs[id] = link
+	go updateFile(localFile)
 	return id
 }
 
 func generateID(localFile LocalFile) string {
-	//mock ID out
-	go updateFile(localFile)
-	return strconv.Itoa(0)
+	const RANDOM_LENGTH = 2
+	chars := []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
+		"abcdefghijklmnopqrstuvwxyz" +
+		"0123456789")
+	randomBuilder := strings.Builder{}
+	for i := 0; i < RANDOM_LENGTH; i++ {
+		randomBuilder.WriteRune(chars[rand.Intn(len(chars))])
+	}
+	index := len(localFile.URLs)
+	idString := fmt.Sprintf("%v%v", index, randomBuilder.String())
+	log.Println(idString)
+	id := base64.StdEncoding.EncodeToString([]byte(idString))
+	return id
 }
 
 //persist in memory map to object
 func updateFile(localFile LocalFile) {
-	bytes, err := json.Marshal(localFile.links)
+	bytes, err := json.Marshal(localFile.URLs)
 	if err != nil {
 		log.Println(fmt.Sprintf("error: %v", err))
 	}
