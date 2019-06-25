@@ -13,12 +13,12 @@ More persistence backends may be added.
 
 ### Binary
 ```shell script
-CGO_ENABLED=0 go build
+make binary
 ```
 
 ### Docker
 ```shell script
-docker build . -t discord-url-shortener-bot
+make docker
 ```
 
 ## Add My Instance Of The Bot To Your Server
