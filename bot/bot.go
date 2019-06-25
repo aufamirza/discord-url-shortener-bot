@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"discord-url-shortener-bot/persistence"
 	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"log"
@@ -8,9 +9,19 @@ import (
 	"regexp"
 )
 
-var urlRegexp = regexp.MustCompile(`(https?://\S+\.\S+)`)
+var urlRegexp *regexp.Regexp = regexp.MustCompile(`(https?://\S+\.\S+)`)
+var linkStore persistence.LinkStore
 
 func Start(stop chan os.Signal, token string) {
+	//set error to empty to prevent locally scoping linkStore
+	var err error = nil
+
+	//configure persistence
+	err, linkStore = persistence.New()
+	if err != nil {
+		log.Fatalf("error: %v", err)
+	}
+
 	//create bot
 	bot, err := discordgo.New("Bot " + token)
 	if err != nil {
@@ -43,10 +54,11 @@ func messageCreate(session *discordgo.Session, message *discordgo.MessageCreate)
 	urls := urlRegexp.FindAllString(message.Content, -1)
 
 	for _, url := range urls {
-		//echo url back
-		_, err := session.ChannelMessageSend(message.ChannelID, url)
+		//persist URL
+		id := linkStore.Add(url)
+		_, err := session.ChannelMessageSend(message.ChannelID, id)
 		if err != nil {
-			log.Println(fmt.Sprintf("error %v", err))
+			log.Println(fmt.Sprintf("error: %v", err))
 		}
 	}
 }
