@@ -1,6 +1,9 @@
 #IDE
 .idea/
 
+#persistence
+data.json
+
 #build artefacts
 discord-url-shortener-bot
 
