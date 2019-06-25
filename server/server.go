@@ -6,26 +6,48 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
 )
 
-func Start() {
+func Start(stop chan os.Signal) {
 	const port = "8080"
 
 	router := httprouter.New()
-	router.GET("/health", Health)
+
+	//route for health check
+	router.GET("/", Health)
+
+	//route for URL redirects
+	router.GET("/:id", ReturnShortURL)
+
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%v", port))
 	if err != nil {
 		log.Fatal(fmt.Sprintf("error: %v", err))
 	}
 
-	log.Println("started web server")
+	//start in goroutine so we can wait for OS signal
+	go func() {
+		err := http.Serve(listener, router)
+		if err != nil {
+			log.Fatal(fmt.Sprintf("error: %v", err))
+		}
+	}()
 
-	err = http.Serve(listener, router)
-	if err != nil {
-		log.Fatal(fmt.Sprintf("error: %v", err))
-	}
+	log.Println(fmt.Sprintf("started web server on port %v", port))
+
+	//block until OS signal
+	<-stop
 }
 
-func Health(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+//handle healthcheck
+func Health(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
 	w.WriteHeader(http.StatusOK)
+}
+
+//handle server URL redirect
+func ReturnShortURL(w http.ResponseWriter, _ *http.Request, p httprouter.Params) {
+	const location = "https://github.com/fraserdarwent"
+
+	w.Header().Add("Location", location)
+	w.WriteHeader(http.StatusMovedPermanently)
 }
