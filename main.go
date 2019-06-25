@@ -1,6 +1,7 @@
 package main
 
 import (
+	"discord-url-shortener-bot/server"
 	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"log"
@@ -41,6 +42,9 @@ func main() {
 	}
 
 	log.Println("started bot")
+
+	//start the server to serve redirect URL's
+	server.Start()
 
 	//make channel to listen to OS signals
 	sc := make(chan os.Signal, 1)
