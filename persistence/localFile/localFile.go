@@ -1,13 +1,13 @@
 package localFile
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"math/rand"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -87,6 +87,13 @@ func loop(localFile LocalFile) {
 	}
 }
 
+//ID must be unique
+//although the redirect URL is not treated as confidential, a slight randomness is applied to prevent guessing being totally trivial
+//TODO
+//convert the index to a string
+//split the index
+//convert the chars to ints using atoi
+//append the matching runes
 func generateID(localFile LocalFile) string {
 	const randomLength = 2
 	chars := []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
@@ -96,11 +103,12 @@ func generateID(localFile LocalFile) string {
 	for i := 0; i < randomLength; i++ {
 		randomBuilder.WriteRune(chars[rand.Intn(len(chars))])
 	}
-	index := len(localFile.uRLs)
-	idString := fmt.Sprintf("%v%v", index, randomBuilder.String())
-	log.Println(idString)
-	id := base64.StdEncoding.EncodeToString([]byte(idString))
-	return id
+	randomBuilder.WriteString(strconv.Itoa(len(localFile.uRLs)))
+	for i := 0; i < randomLength; i++ {
+		randomBuilder.WriteRune(chars[rand.Intn(len(chars))])
+	}
+	idString := fmt.Sprintf("%v", randomBuilder.String())
+	return idString
 }
 
 //persist in memory map to object
