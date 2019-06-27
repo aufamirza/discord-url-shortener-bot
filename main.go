@@ -23,7 +23,7 @@ func main() {
 		log.Fatal(fmt.Sprintf("error: could not find env var $%v", tokenEnvVar))
 	}
 
-	err, URLStore := persistence.New()
+	err, URLStore := persistence.New(persistence.BackendTypeLocalFile)
 	if err != nil {
 		log.Fatal(fmt.Sprintf("error: could not find env var $%v", tokenEnvVar))
 	}
