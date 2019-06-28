@@ -44,12 +44,6 @@ func main() {
 	const protocolEnvVar = "DISCORD_BOT_PROTOCOL"
 	//get the ENV var
 	protocol := strings.ToLower(os.Getenv(protocolEnvVar))
-	//if ENV var wasn't set then throw error
-	if protocol == "" {
-		log.Fatal(fmt.Sprintf("error: could not find env var $%v", protocolEnvVar))
-	} else if !(protocol == "https" || protocol == "http") {
-		log.Fatal("error: protocol must be http or https")
-	}
 
 	err, URLStore := persistence.New()
 	if err != nil {
