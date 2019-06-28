@@ -68,6 +68,10 @@ func messageCreate(session *discordgo.Session, message *discordgo.MessageCreate)
 		if err != nil {
 			log.Println(fmt.Sprintf("error: %v", err))
 		}
+		err = session.ChannelMessageDelete(message.ChannelID, message.ID)
+		if err != nil {
+			log.Println(fmt.Sprintf("error: %v", err))
+		}
 	}
 }
 
