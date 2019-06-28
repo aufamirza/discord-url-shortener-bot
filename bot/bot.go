@@ -28,9 +28,10 @@ func Start(stop chan os.Signal, token string, newProtocol string, newHost string
 	//configure protocol
 	protocol = newProtocol
 	//configure port
-	if newPort != "" {
+	if newPort != "" && newPort != "80" && newPort != "443" {
 		port = fmt.Sprintf(":%v", newPort)
 	}
+
 	//create bot
 	bot, err := discordgo.New("Bot " + token)
 	if err != nil {

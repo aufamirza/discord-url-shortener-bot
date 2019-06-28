@@ -15,7 +15,9 @@ var port string
 
 func Start(stop chan os.Signal, newPort string, newURLStore persistence.URLStore) {
 	//configure port
-	port = newPort
+	if newPort == "" {
+		port = "80"
+	}
 
 	//configure URLStore
 	URLStore = newURLStore
