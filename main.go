@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 )
 
@@ -31,24 +32,26 @@ func main() {
 	}
 
 	//set the ENV var to read
-	const persistenceBackendTypeEnvVar = "DISCORD_BOT_PERSISTENCE_BACKEND_TYPE"
+	const postEnvVar = "DISCORD_BOT_PORT"
 	//get the ENV var
-	persistenceBackend := os.Getenv(persistenceBackendTypeEnvVar)
+	port := os.Getenv(postEnvVar)
 	//if ENV var wasn't set then throw error
-	if persistenceBackend == "" {
-		log.Fatal(fmt.Sprintf("error: could not find env var $%v", persistenceBackendTypeEnvVar))
+	if port == "" {
+		log.Fatal(fmt.Sprintf("error: could not find env var $%v", postEnvVar))
 	}
 
-	const persistenceBackendSqlConnectionStringEnvVar = "DISCORD_BOT_PERSISTENCE_BACKEND_SQL_CONNECTION_STRING"
-	persistenceBackendSqlHost := os.Getenv(persistenceBackendSqlConnectionStringEnvVar)
-	if persistenceBackend == "SQL" {
-		//set the ENV var to read
-		if persistenceBackendSqlHost == "" {
-			log.Fatal(fmt.Sprintf("error: persistence type SQL selected but could not find env var $%v", persistenceBackendSqlConnectionStringEnvVar))
-		}
+	//set the ENV var to read
+	const protocolEnvVar = "DISCORD_BOT_PROTOCOL"
+	//get the ENV var
+	protocol := strings.ToLower(os.Getenv(protocolEnvVar))
+	//if ENV var wasn't set then throw error
+	if protocol == "" {
+		log.Fatal(fmt.Sprintf("error: could not find env var $%v", protocolEnvVar))
+	} else if !(protocol == "https" || protocol == "http") {
+		log.Fatal("error: protocol must be http or https")
 	}
 
-	err, URLStore := persistence.New(persistence.BackendTypeLocalFile)
+	err, URLStore := persistence.New()
 	if err != nil {
 		log.Fatal(fmt.Sprintf("error: could not find env var $%v", tokenEnvVar))
 	}
@@ -56,8 +59,8 @@ func main() {
 	var stop = make(chan os.Signal)
 
 	//start the server to serve redirect URL's
-	go server.Start(stop, URLStore)
-	go bot.Start(stop, token, host, URLStore)
+	go server.Start(stop, port, URLStore)
+	go bot.Start(stop, token, protocol, host, URLStore)
 
 	//make channel to listen to OS signals
 	sc := make(chan os.Signal, 1)

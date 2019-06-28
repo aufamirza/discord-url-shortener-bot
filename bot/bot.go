@@ -12,12 +12,15 @@ import (
 var urlRegexp *regexp.Regexp = regexp.MustCompile(`(https?://\S+\.\S+)`)
 var URLStore persistence.URLStore
 var hostname string
+var protocol string
 
-func Start(stop chan os.Signal, token string, newHost string, newURLStore persistence.URLStore) {
+func Start(stop chan os.Signal, token string, newProtocol string, newHost string, newURLStore persistence.URLStore) {
 	//configure hostname
 	hostname = newHost
 	//configure persistence
 	URLStore = newURLStore
+	//configure protocol
+	protocol = newProtocol
 
 	//create bot
 	bot, err := discordgo.New("Bot " + token)
@@ -53,7 +56,7 @@ func messageCreate(session *discordgo.Session, message *discordgo.MessageCreate)
 	for _, url := range urls {
 		//persist URL
 		id := URLStore.Add(url)
-		_, err := session.ChannelMessageSend(message.ChannelID, fmt.Sprintf("http://%v/%v", hostname, id))
+		_, err := session.ChannelMessageSend(message.ChannelID, fmt.Sprintf("%v://%v/%v", protocol, hostname, id))
 		if err != nil {
 			log.Println(fmt.Sprintf("error: %v", err))
 		}
