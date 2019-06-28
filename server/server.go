@@ -11,10 +11,13 @@ import (
 )
 
 var URLStore persistence.URLStore
+var port string
 
-func Start(stop chan os.Signal, newURLStore persistence.URLStore) {
-	const port = "8080"
+func Start(stop chan os.Signal, newPort string, newURLStore persistence.URLStore) {
+	//configure port
+	port = newPort
 
+	//configure URLStore
 	URLStore = newURLStore
 
 	router := httprouter.New()

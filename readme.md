@@ -21,5 +21,13 @@ make binary
 make docker
 ```
 
+## Run Your Own Instance
+```shell script
+DISCORD_BOT_TOKEN=<YOUR_TOKEN_HERE> \
+DISCORD_BOT_PROTOCOL=<HTTP || HTTPS> \
+DISCORD_BOT_HOST=<YOUR_HOST_HERE> \
+DISORD_BOT_PORT=<WEB_SERVER_PORT> \
+go run main.go
+```
 ## Add My Instance Of The Bot To Your Server
 https://discordapp.com/api/oauth2/authorize?client_id=592857117548085288&permissions=10240&redirect_uri=https%3A%2F%2Fdiscordapp.com%2Foauth2%2Fauthorize&scope=bot
