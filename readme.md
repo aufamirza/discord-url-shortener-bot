@@ -22,6 +22,7 @@ make docker
 ```
 
 ## Run Your Own Instance
+Build the binary
 ```shell script
 DISCORD_BOT_TOKEN=<YOUR_TOKEN_HERE> \
 DISCORD_BOT_PROTOCOL=<HTTP || HTTPS> \
