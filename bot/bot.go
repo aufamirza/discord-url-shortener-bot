@@ -9,7 +9,11 @@ import (
 	"regexp"
 )
 
+//url match regex
 var urlRegexp *regexp.Regexp = regexp.MustCompile(`(https?://\S+\.\S+)`)
+
+//ignore list regex
+var urlIgnoreRegex *regexp.Regexp = regexp.MustCompile(`(open.spotify.com)`)
 var URLStore persistence.URLStore
 var hostname string
 var protocol string
@@ -54,6 +58,10 @@ func messageCreate(session *discordgo.Session, message *discordgo.MessageCreate)
 	urls := urlRegexp.FindAllString(message.Content, -1)
 
 	for _, url := range urls {
+		//url ignore list
+		if ignore(url) {
+			return
+		}
 		//persist URL
 		id := URLStore.Add(url)
 		_, err := session.ChannelMessageSend(message.ChannelID, fmt.Sprintf("%v://%v/%v", protocol, hostname, id))
@@ -61,4 +69,9 @@ func messageCreate(session *discordgo.Session, message *discordgo.MessageCreate)
 			log.Println(fmt.Sprintf("error: %v", err))
 		}
 	}
+}
+
+//match ignore list
+func ignore(URL string) bool {
+	return urlIgnoreRegex.MatchString(URL)
 }
