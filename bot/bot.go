@@ -11,11 +11,11 @@ import (
 
 var urlRegexp *regexp.Regexp = regexp.MustCompile(`(https?://\S+\.\S+)`)
 var URLStore persistence.URLStore
+var hostname string
 
-func Start(stop chan os.Signal, token string, newURLStore persistence.URLStore) {
-	//set error to empty to prevent locally scoping linkStore
-	var err error = nil
-
+func Start(stop chan os.Signal, token string, newHost string, newURLStore persistence.URLStore) {
+	//configure hostname
+	hostname = newHost
 	//configure persistence
 	URLStore = newURLStore
 
@@ -53,7 +53,7 @@ func messageCreate(session *discordgo.Session, message *discordgo.MessageCreate)
 	for _, url := range urls {
 		//persist URL
 		id := URLStore.Add(url)
-		_, err := session.ChannelMessageSend(message.ChannelID, fmt.Sprintf("http://localhost:8080/%v", id))
+		_, err := session.ChannelMessageSend(message.ChannelID, fmt.Sprintf("http://%v/%v", hostname, id))
 		if err != nil {
 			log.Println(fmt.Sprintf("error: %v", err))
 		}

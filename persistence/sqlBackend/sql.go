@@ -3,7 +3,7 @@ package sqlBackend
 type sql struct {
 }
 
-func New() (error, sql) {
+func New(connectionString string) (error, sql) {
 	//condb, errdb := SQL.Open("mssql", "server=localhost;user id=sa;password=SA_PASSWORD=yourStrong(!)Password;")
 	return nil, sql{}
 }

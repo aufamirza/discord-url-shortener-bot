@@ -29,10 +29,9 @@ type localFile struct {
 	addRequestChan chan addRequest
 }
 
-func New() (error, localFile) {
+func New(filePath string) (error, localFile) {
 	//filename is currently hardcoded
 	//TODO parameterize
-	const filePath = "data.json"
 	newLocalFile := localFile{
 		filePath:       filePath,
 		uRLs:           map[string]string{},

@@ -19,11 +19,11 @@ type URLStore interface {
 	Get(id string) string
 }
 
-func New(backend BackendType) (error, URLStore) {
+func New(backend BackendType, location string) (error, URLStore) {
 	switch backend {
 	case BackendTypeLocalFile:
 		{
-			err, localFile := localFileBackend.New()
+			err, localFile := localFileBackend.New(location)
 			if err != nil {
 				log.Fatal(fmt.Sprintf("error: %v", err))
 			}
@@ -31,7 +31,7 @@ func New(backend BackendType) (error, URLStore) {
 		}
 	case BackendTypeSQL:
 		{
-			err, sql := sqlBackend.New()
+			err, sql := sqlBackend.New(location)
 			if err != nil {
 				log.Fatal(fmt.Sprintf("error: %v", err))
 			}
@@ -39,7 +39,7 @@ func New(backend BackendType) (error, URLStore) {
 		}
 	default:
 		{
-			return errors.New("no persistence backend selected"), nil
+			return errors.New("persistence backend not recognised"), nil
 		}
 	}
 }
