@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"strings"
 )
 
 //url match regex
@@ -17,15 +18,19 @@ var urlIgnoreRegex *regexp.Regexp = regexp.MustCompile(`(open.spotify.com)`)
 var URLStore persistence.URLStore
 var hostname string
 var protocol string
+var port string
 
-func Start(stop chan os.Signal, token string, newProtocol string, newHost string, newURLStore persistence.URLStore) {
+func Start(stop chan os.Signal, token string, newProtocol string, newHost string, newPort string, newURLStore persistence.URLStore) {
 	//configure hostname
 	hostname = newHost
 	//configure persistence
 	URLStore = newURLStore
 	//configure protocol
 	protocol = newProtocol
-
+	//configure port
+	if newPort != "" {
+		port = fmt.Sprintf(":%v", newPort)
+	}
 	//create bot
 	bot, err := discordgo.New("Bot " + token)
 	if err != nil {
@@ -56,22 +61,26 @@ func messageCreate(session *discordgo.Session, message *discordgo.MessageCreate)
 
 	//get all matched URL's in the message
 	urls := urlRegexp.FindAllString(message.Content, -1)
-
-	for _, url := range urls {
-		//url ignore list
-		if ignore(url) {
-			return
+	if 0 < len(urls) {
+		newMessage := message.Content
+		for _, url := range urls {
+			//url ignore list
+			if ignore(url) {
+				return
+			}
+			//persist URL
+			id := URLStore.Add(url)
+			newMessage = strings.Replace(newMessage, url, fmt.Sprintf("%v://%v%v/%v", protocol, hostname, port, id), -1)
 		}
-		//persist URL
-		id := URLStore.Add(url)
-		_, err := session.ChannelMessageSend(message.ChannelID, fmt.Sprintf("%v://%v/%v", protocol, hostname, id))
+		_, err := session.ChannelMessageSend(message.ChannelID, fmt.Sprintf("%v\n%v", message.Author.Mention(), newMessage))
+		if err != nil {
+			log.Println(fmt.Sprintf("error: %v", err))
+		}
 		if err != nil {
 			log.Println(fmt.Sprintf("error: %v", err))
 		}
 		err = session.ChannelMessageDelete(message.ChannelID, message.ID)
-		if err != nil {
-			log.Println(fmt.Sprintf("error: %v", err))
-		}
+
 	}
 }
 

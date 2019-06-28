@@ -60,7 +60,7 @@ func main() {
 
 	//start the server to serve redirect URL's
 	go server.Start(stop, port, URLStore)
-	go bot.Start(stop, token, protocol, host, URLStore)
+	go bot.Start(stop, token, protocol, host, port, URLStore)
 
 	//make channel to listen to OS signals
 	sc := make(chan os.Signal, 1)
