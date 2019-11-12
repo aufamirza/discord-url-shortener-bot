@@ -55,8 +55,8 @@ func Start(stop chan os.Signal, token string, newProtocol string, newHost string
 }
 
 func messageCreate(session *discordgo.Session, message *discordgo.MessageCreate) {
-	//ignore messages from self
-	if message.Author.ID == session.State.User.ID {
+	//ignore messages from self and bots
+	if message.Author.ID == session.State.User.ID || message.Author.Bot {
 		return
 	}
 
