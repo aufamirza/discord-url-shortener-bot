@@ -71,7 +71,7 @@ func messageCreate(session *discordgo.Session, message *discordgo.MessageCreate)
 			}
 			//persist URL
 			id := URLStore.Add(url)
-			newMessage = strings.Replace(newMessage, url, fmt.Sprintf("%v://%v%v/%v", protocol, hostname, port, id), -1)
+			newMessage = strings.Replace(newMessage, url, fmt.Sprintf("%v://%v/%v", protocol, hostname, id), -1)
 		}
 		_, err := session.ChannelMessageSend(message.ChannelID, fmt.Sprintf("%v\n%v", message.Author.Mention(), newMessage))
 		if err != nil {
