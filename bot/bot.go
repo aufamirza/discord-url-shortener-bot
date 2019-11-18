@@ -60,6 +60,11 @@ func messageCreate(session *discordgo.Session, message *discordgo.MessageCreate)
 		return
 	}
 
+	// ignore other bots
+	if message.Author.Bot {
+		return
+	}
+
 	//get all matched URL's in the message
 	urls := urlRegexp.FindAllString(message.Content, -1)
 	if 0 < len(urls) {
